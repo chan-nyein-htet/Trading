@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Backtest Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #bbdefb;
+        }
+
+        .input-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group label {
+            margin-right: 10px;
+            font-size: 0.9rem;
+            color: #bbdefb;
+        }
+
+        .input-group input {
+            padding: 8px;
+            font-size: 0.9rem;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background-color: #424242;
+            color: #fff;
+            width: 120px;
+        }
+
+        .input-group button {
+            padding: 8px;
+            font-size: 0.9rem;
+            background-color: #1976D2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .input-group button:hover {
+            background-color: #1565C0;
+            transform: translateY(-2px);
+        }
+
+        #addProfitBtn {
+            background-color: #388E3C;
+        }
+
+        #addProfitBtn:hover {
+            background-color: #2C6E1F;
+        }
+
+        #addLossBtn {
+            background-color: #D32F2F;
+        }
+
+        #addLossBtn:hover {
+            background-color: #B71C1C;
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: #424242;
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: #bbdefb;
+        }
+
+        .card p {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .chart-container {
+            margin-top: 40px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .chart-container canvas {
+            width: 100%;
+            height: 600px;
+        }
+
+        .data-window {
+            width: 25%;
+            background-color: #424242;
+            color: #fff;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+
+        .data-window h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #bbdefb;
+        }
+
+        .data-window p {
+            font-size: 0.8rem;
+            margin: 8px 0;
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        .positive {
+            color: #81C784;
+        }
+
+        .negative {
+            color: #FF7043;
+        }
+
+        .neutral {
+            color: #bbdefb;
+        }
+
+        .card:hover {
+            background-color: #616161;
+            transform: translateY(-5px);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        #resetBtn {
+            background-color: #D32F2F;
+            color: white;
+            border-radius: 5px;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        #resetBtn:hover {
+            background-color: #B71C1C;
+            transform: translateY(-2px);
+        }
+
+        #saveBtn {
+            background-color: #388E3C;
+            color: white;
+            border-radius: 5px;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        #saveBtn:hover {
+            background-color: #2C6E1F;
+            transform: translateY(-2px);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Trading Backtest Dashboard</h2>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>Total Trades</h3>
+                <p id="totalTrades" class="neutral">0</p>
+            </div>
+            <div class="card">
+                <h3>Profit / Loss</h3>
+                <p id="profitLoss" class="neutral">$0</p>
+            </div>
+            <div class="card">
+                <h3>Max Drawdown (%)</h3>
+                <p id="maxDrawdown" class="negative">0%</p>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group" style="flex: 1;">
+                <label for="initialCapital">Initial Capital ($)</label>
+                <input type="number" id="initialCapital" value="10000">
+                <button id="setCapitalBtn">Set</button>
+            </div>
+
+            <div class="input-group" style="flex: 1;">
+                <label for="profitPercentage">Profit Percentage (%)</label>
+                <input type="number" id="profitPercentage" value="1" step="1">
+                <button id="addProfitBtn">Add</button>
+            </div>
+
+            <div class="input-group" style="flex: 1;">
+                <label for="lossPercentage">Loss Percentage (%)</label>
+                <input type="number" id="lossPercentage" value="1" step="1">
+                <button id="addLossBtn">Add</button>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-area">
+                <h3>Performance Overview</h3>
+                <canvas id="performanceChart"></canvas>
+            </div>
+
+            <div class="data-window">
+                <h3>Trading Stats</h3>
+                <p><strong>Win Rate:</strong> <span id="winRate" class="positive">0%</span></p>
+                <p><strong>Total Wins:</strong> <span id="totalWins" class="positive">0</span></p>
+                <p><strong>Total Losses:</strong> <span id="totalLosses" class="negative">0</span></p>
+                <p><strong>PnL:</strong> <span id="pnl" class="neutral">$0</span></p>
+                <p><strong>Max Drawdown:</strong> <span id="maxDrawdownStat" class="negative">0%</span></p>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button id="resetBtn">Reset</button>
+            <button id="saveBtn">Save</button>
+        </div>
+
+    </div>
+
+    <script>
+        let tradeData = [
+            { date: '2023-01-01', balance: 10000, isWin: null }
+        ];
+
+        let totalWins = 0;
+        let totalLosses = 0;
+        let maxDrawdown = 0;
+        let highestBalance = tradeData[0].balance;
+
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        let performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: tradeData.map(t => t.date),
+                datasets: [{
+                    label: 'Balance',
+                    data: tradeData.map(t => t.balance),
+                    borderColor: '#bbdefb', 
+                    backgroundColor: 'rgba(187, 222, 251, 0.2)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0, 
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        backgroundColor: '#1A237E',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#444',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                label += `: $${context.raw.toFixed(2)}`;
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date',
+                            color: '#bbdefb'
+                        },
+                        grid: {
+                            color: '#444',
+                            lineWidth: 0.5
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Balance ($)',
+                            color: '#bbdefb'
+                        },
+                        ticks: {
+                            beginAtZero: true,
+                            color: '#e0e0e0'
+                        },
+                        grid: {
+                            color: '#444',
+                            lineWidth: 0.5
+                        }
+                    }
+                }
+            }
+        });
+
+        function calculateStats() {
+            totalWins = 0;
+            totalLosses = 0;
+            maxDrawdown = 0;
+            highestBalance = tradeData[0].balance;
+
+            tradeData.forEach((trade, index) => {
+                if (trade.isWin === true) {
+                    totalWins++;
+                } else if (trade.isWin === false) {
+                    totalLosses++;
+                }
+
+                if (trade.balance > highestBalance) {
+                    highestBalance = trade.balance;
+                }
+
+                if (trade.balance < highestBalance) {
+                    let drawdown = ((highestBalance - trade.balance) / highestBalance) * 100;
+                    maxDrawdown = Math.max(maxDrawdown, drawdown);
+                }
+            });
+
+            const winRate = (totalWins / (totalWins + totalLosses)) * 100 || 0;
+            const pnl = tradeData[tradeData.length - 1].balance - tradeData[0].balance;
+
+            document.getElementById('totalTrades').textContent = tradeData.length - 1;
+            document.getElementById('profitLoss').textContent = `$${pnl.toFixed(2)}`;
+            document.getElementById('maxDrawdown').textContent = `${maxDrawdown.toFixed(2)}%`;
+            document.getElementById('winRate').textContent = `${winRate.toFixed(2)}%`;
+            document.getElementById('totalWins').textContent = totalWins;
+            document.getElementById('totalLosses').textContent = totalLosses;
+            document.getElementById('pnl').textContent = `$${pnl.toFixed(2)}`;
+            document.getElementById('maxDrawdownStat').textContent = `${maxDrawdown.toFixed(2)}%`;
+
+            performanceChart.data.labels = tradeData.map(t => t.date);
+            performanceChart.data.datasets[0].data = tradeData.map(t => t.balance);
+            performanceChart.update();
+        }
+
+        // Event listener for adding profit
+        document.getElementById('addProfitBtn').addEventListener('click', function() {
+            const profitPercentage = parseFloat(document.getElementById('profitPercentage').value);
+            const lastBalance = tradeData[tradeData.length - 1].balance;
+            const profitAmount = lastBalance * (profitPercentage / 100);
+            const newBalance = lastBalance + profitAmount;
+
+            tradeData.push({
+                date: new Date().toLocaleDateString(),
+                balance: newBalance,
+                isWin: true
+            });
+
+            calculateStats();
+        });
+
+        // Event listener for adding loss
+        document.getElementById('addLossBtn').addEventListener('click', function() {
+            const lossPercentage = parseFloat(document.getElementById('lossPercentage').value);
+            const lastBalance = tradeData[tradeData.length - 1].balance;
+            const lossAmount = lastBalance * (lossPercentage / 100);
+            const newBalance = lastBalance - lossAmount;
+
+            tradeData.push({
+                date: new Date().toLocaleDateString(),
+                balance: newBalance,
+                isWin: false
+            });
+
+            calculateStats();
+        });
+
+        // Event listener for resetting data
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            tradeData = [
+                { date: '2023-01-01', balance: 10000, isWin: null }
+            ];
+            calculateStats();
+        });
+
+        // Event listener for saving to spreadsheet (CSV)
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            let csvContent = "Date,Balance,Win/Loss,Win Rate,Total Wins,Total Losses,PnL,Max Drawdown\n";
+            
+            tradeData.forEach(trade => {
+                csvContent += `${trade.date},${trade.balance.toFixed(2)},${trade.isWin === null ? 'Pending' : (trade.isWin ? 'Win' : 'Loss')}\n`;
+            });
+
+            csvContent += `,,,,${totalWins},${totalLosses},${(totalWins / (totalWins + totalLosses) * 100).toFixed(2)}%\n`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "trade_data.csv");
+                link.click();
+            }
+        });
+
+        // Initial stats calculation
+        calculateStats();
+    </script>
+
+</body>
+</html>
